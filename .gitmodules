@@ -1,0 +1,3 @@
+[submodule "AppUtils"]
+	path = AppUtils
+	url = https://github.com/uvadev/AppUtils.git

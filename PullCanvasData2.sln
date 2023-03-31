@@ -1,0 +1,22 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PullCanvasData2", "PullCanvasData2\PullCanvasData2.csproj", "{3C5EB2CC-F801-4A37-8EE7-4BD1988A02D6}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AppUtils", "AppUtils\AppUtils.csproj", "{7CB0F2BC-C54F-4E0D-AEB0-9BA7DE76DACB}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{3C5EB2CC-F801-4A37-8EE7-4BD1988A02D6}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{3C5EB2CC-F801-4A37-8EE7-4BD1988A02D6}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{3C5EB2CC-F801-4A37-8EE7-4BD1988A02D6}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{3C5EB2CC-F801-4A37-8EE7-4BD1988A02D6}.Release|Any CPU.Build.0 = Release|Any CPU
+		{7CB0F2BC-C54F-4E0D-AEB0-9BA7DE76DACB}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{7CB0F2BC-C54F-4E0D-AEB0-9BA7DE76DACB}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{7CB0F2BC-C54F-4E0D-AEB0-9BA7DE76DACB}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{7CB0F2BC-C54F-4E0D-AEB0-9BA7DE76DACB}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+EndGlobal
