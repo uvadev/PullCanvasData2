@@ -1,4 +1,5 @@
 ﻿using System;
+using System.IO;
 using System.Threading.Tasks;
 using AppUtils;
 using Tomlyn.Syntax;
@@ -42,5 +43,22 @@ internal static class Program {
         );
 
         await api.Authenticate();
+        Console.WriteLine("Auth OK.");
+
+        var job = await api.PostSnapshotJob("wikis");
+        job = await api.AwaitJobCompletion(job);
+
+        var urls = await api.GetJobUrls(job);
+        Directory.CreateDirectory("download");
+
+        foreach (var url in urls) {
+            var filePath = $"download/{url.Key.Split('/')[1]}";
+            var downloadStream = await api.StreamUrl(url.Value);
+
+            using var fileStream = File.Create(filePath);
+            await downloadStream.CopyToAsync(fileStream);
+        }
+
+        Console.WriteLine("Done.");
     }
 }

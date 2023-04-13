@@ -1,11 +1,9 @@
 ﻿using System;
-using JetBrains.Annotations;
 using Newtonsoft.Json;
 
 namespace PullCanvasData2.Structures; 
 
-[PublicAPI]
-public class AuthenticationResponse {
+internal class AuthenticationResponse {
     [JsonProperty("access_token")]
     public string AccessToken { get; private set; }
         
