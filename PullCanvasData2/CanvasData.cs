@@ -4,56 +4,45 @@ using System.IO;
 using System.Linq;
 using System.Net.Http;
 using System.Net.Http.Headers;
-using System.Text;
 using System.Threading.Tasks;
 using JetBrains.Annotations;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using PullCanvasData2.Structures;
+using static PullCanvasData2.Util;
 
 namespace PullCanvasData2 {
     [PublicAPI]
     public class CanvasData {
         private readonly HttpClient client;
-        
-        private readonly string clientId;
-        private readonly string clientSecret;
-
-        private AuthenticationResponse token;
+        private readonly AuthMonitor authMonitor;
         
         public CanvasData(string baseUrl, string clientId, string clientSecret) {
             client = new HttpClient();
-            this.clientId = clientId;
-            this.clientSecret = clientSecret;
+            authMonitor = new AuthMonitor(baseUrl, clientId, clientSecret);
 
             client.BaseAddress = new Uri(baseUrl);
             client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
         }
 
         public async Task Authenticate() {
-            try {
-                var args = new[] {
-                    ("grant_type", "client_credentials")
-                };
+            await authMonitor.Authenticate();
+        }
 
-                client.DefaultRequestHeaders.Remove("x-instauth");
-                client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue(
-                     "Basic", 
-                     Convert.ToBase64String(System.Text.Encoding.ASCII.GetBytes(clientId + ":" + clientSecret))
-                    );
-                var response = await client.PostAsync("ids/auth/login", BuildHttpArguments(args));
-
-                AssertSuccess(response);
-            
-                token = JsonConvert.DeserializeObject<AuthenticationResponse>(await response.Content.ReadAsStringAsync());
-            } finally {
-                client.DefaultRequestHeaders.Authorization = null;
-                client.DefaultRequestHeaders.Add("x-instauth", token.AccessToken);
-            }
+        private async Task<HttpResponseMessage> GetWithAuthAsync(string url) {
+            return await client.GetAsyncWithHeaders(url, new[] {
+                ("x-instauth", await authMonitor.GetAccessToken())
+            });
+        }
+        
+        private async Task<HttpResponseMessage> PostWithAuthAsync(string url, HttpContent content) {
+            return await client.PostAsyncWithHeaders(url, content, new[] {
+                ("x-instauth", await authMonitor.GetAccessToken())
+            });
         }
 
         public async Task<List<string>> GetTableList() {
-            var response = await client.GetAsync("/dap/query/canvas/table");
+            var response = await GetWithAuthAsync("/dap/query/canvas/table");
         
             AssertSuccess(response);
         
@@ -62,7 +51,7 @@ namespace PullCanvasData2 {
         }
 
         public async Task<JObject> GetTableSchema(string tableName) {
-            var response = await client.GetAsync($"/dap/query/canvas/table/{tableName}/schema");
+            var response = await GetWithAuthAsync($"/dap/query/canvas/table/{tableName}/schema");
         
             AssertSuccess(response);
 
@@ -70,10 +59,10 @@ namespace PullCanvasData2 {
         }
 
         public async Task<SnapshotJob> PostSnapshotJob(string tableName, DataFormat format = DataFormat.JsonLines) {
-            var response = await client.PostAsync(
-                                                  $"/dap/query/canvas/table/{tableName}/data", 
-                                                  BuildHttpJsonBody(JObject.FromObject(new { format = FormatToString(format) }))
-                                                 );
+            var response = await PostWithAuthAsync(
+                                                   $"/dap/query/canvas/table/{tableName}/data", 
+                                                   BuildHttpJsonBody(JObject.FromObject(new { format = FormatToString(format) }))
+                                                   );
 
             AssertSuccess(response);
         
@@ -81,10 +70,10 @@ namespace PullCanvasData2 {
         }
     
         public async Task<IncrementalJob> PostIncrementalJob(string tableName, DateTime since, DataFormat format = DataFormat.JsonLines) {
-            var response = await client.PostAsync(
-                                                  $"/dap/query/canvas/table/{tableName}/data", 
-                                                  BuildHttpJsonBody(JObject.FromObject(new { format = FormatToString(format), since }))
-                                                 );
+            var response = await PostWithAuthAsync(
+                                                   $"/dap/query/canvas/table/{tableName}/data", 
+                                                   BuildHttpJsonBody(JObject.FromObject(new { format = FormatToString(format), since }))
+                                                   );
 
             AssertSuccess(response);
         
@@ -96,7 +85,7 @@ namespace PullCanvasData2 {
         }
     
         public async Task<T> GetJobStatus<T>(string jobId) where T: Job {
-            var response = await client.GetAsync($"/dap/job/{jobId}");
+            var response = await GetWithAuthAsync($"/dap/job/{jobId}");
         
             AssertSuccess(response);
         
@@ -121,10 +110,10 @@ namespace PullCanvasData2 {
                 throw new CanvasDataException("GetObjectUrls() called on incomplete or failed job.");
             }
         
-            var response = await client.PostAsync(
-                                                  "/dap/object/url", 
-                                                  BuildHttpJsonBody(JArray.FromObject(j.Objects))
-                                                 );
+            var response = await PostWithAuthAsync(
+                                                   "/dap/object/url", 
+                                                   BuildHttpJsonBody(JArray.FromObject(j.Objects))
+                                                   );
         
             var data = JsonConvert.DeserializeObject<ObjectUrlsResponse>(await response.Content.ReadAsStringAsync());
         
@@ -134,28 +123,6 @@ namespace PullCanvasData2 {
 
         public Task<Stream> StreamUrl(string url) {
             return client.GetStreamAsync(url);
-        }
-
-        private static void AssertSuccess(HttpResponseMessage response) {
-            if (!response.IsSuccessStatusCode) {
-                throw new CanvasDataException(response.Content.ReadAsStringAsync().Result);
-            }
-        }
-        
-        private static HttpContent BuildHttpArguments([NotNull] IEnumerable<(string, string)> args) {
-
-            var pairs = args.Where(a => a.Item2 != null)
-                            .Select(a => new KeyValuePair<string, string>(a.Item1, a.Item2));
-
-            var content = new FormUrlEncodedContent(pairs);
-            
-            content.Headers.ContentType = new MediaTypeHeaderValue("application/x-www-form-urlencoded");
-
-            return content;
-        }
-    
-        private static HttpContent BuildHttpJsonBody(JToken json) {
-            return new StringContent(json.ToString(), Encoding.Default, "application/json");
         }
 
         private static string FormatToString(DataFormat dataFormat) {

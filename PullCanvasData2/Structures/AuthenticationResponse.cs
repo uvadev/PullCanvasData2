@@ -19,6 +19,7 @@ namespace PullCanvasData2.Structures {
         
         public DateTime ExpiresAt => CreatedAt.AddSeconds(ExpiresIn);
 
+        [JsonConstructor]
         public AuthenticationResponse() {
             CreatedAt = DateTime.Now;
         }

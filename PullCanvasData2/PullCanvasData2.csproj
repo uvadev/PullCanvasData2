@@ -78,8 +78,11 @@
         </Reference>
     </ItemGroup>
     <ItemGroup>
+        <Compile Include="AuthMonitor.cs" />
         <Compile Include="CanvasData.cs" />
+        <Compile Include="CanvasDataAuthenticationException.cs" />
         <Compile Include="CanvasDataException.cs" />
+        <Compile Include="Util.cs" />
         <None Include="Program.cs" />
         <Compile Include="Properties\AssemblyInfo.cs" />
         <Compile Include="Structures\AuthenticationResponse.cs" />
