@@ -41,8 +41,8 @@ namespace PullCanvasData2 {
             });
         }
 
-        public async Task<List<string>> GetTableList() {
-            var response = await GetWithAuthAsync("/dap/query/canvas/table");
+        public async Task<List<string>> GetTableList(DataNamespace ns = DataNamespace.Canvas) {
+            var response = await GetWithAuthAsync($"/dap/query/{NamespaceToString(ns)}/table");
         
             AssertSuccess(response);
         
@@ -50,17 +50,17 @@ namespace PullCanvasData2 {
             return data.Tables;
         }
 
-        public async Task<JObject> GetTableSchema(string tableName) {
-            var response = await GetWithAuthAsync($"/dap/query/canvas/table/{tableName}/schema");
+        public async Task<JObject> GetTableSchema(string tableName, DataNamespace ns = DataNamespace.Canvas) {
+            var response = await GetWithAuthAsync($"/dap/query/{NamespaceToString(ns)}/table/{tableName}/schema");
         
             AssertSuccess(response);
 
             return JObject.Parse(await response.Content.ReadAsStringAsync());
         }
 
-        public async Task<SnapshotJob> PostSnapshotJob(string tableName, DataFormat format = DataFormat.JsonLines) {
+        public async Task<SnapshotJob> PostSnapshotJob(string tableName, DataFormat format = DataFormat.JsonLines, DataNamespace ns = DataNamespace.Canvas) {
             var response = await PostWithAuthAsync(
-                                                   $"/dap/query/canvas/table/{tableName}/data", 
+                                                   $"/dap/query/{NamespaceToString(ns)}/table/{tableName}/data",
                                                    BuildHttpJsonBody(JObject.FromObject(new { format = FormatToString(format) }))
                                                    );
 
@@ -69,9 +69,9 @@ namespace PullCanvasData2 {
             return JsonConvert.DeserializeObject<SnapshotJob>(await response.Content.ReadAsStringAsync());
         }
     
-        public async Task<IncrementalJob> PostIncrementalJob(string tableName, DateTime since, DataFormat format = DataFormat.JsonLines) {
+        public async Task<IncrementalJob> PostIncrementalJob(string tableName, DateTime since, DataFormat format = DataFormat.JsonLines, DataNamespace ns = DataNamespace.Canvas) {
             var response = await PostWithAuthAsync(
-                                                   $"/dap/query/canvas/table/{tableName}/data", 
+                                                   $"/dap/query/{NamespaceToString(ns)}/table/{tableName}/data",
                                                    BuildHttpJsonBody(JObject.FromObject(new { format = FormatToString(format), since }))
                                                    );
 
@@ -132,6 +132,15 @@ namespace PullCanvasData2 {
                 DataFormat.JsonLines => "jsonl",
                 DataFormat.Parquet => "parquet",
                 _ => throw new ArgumentOutOfRangeException(nameof(dataFormat), dataFormat, null)
+            };
+        }
+
+        private static string NamespaceToString(DataNamespace ns) {
+            return ns switch {
+                DataNamespace.Canvas => "canvas",
+                DataNamespace.CanvasLogs => "canvas_logs",
+                DataNamespace.NewQuizzes => "new_quizzes",
+                _ => throw new ArgumentOutOfRangeException(nameof(ns), ns, null)
             };
         }
     }
