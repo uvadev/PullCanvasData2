@@ -12,25 +12,18 @@ jobs:
     steps:
     - name: Checkout
       uses: actions/checkout@v2
-      with:
-        submodules: 'true'
-    - name: Setup MSBuild Path
-      uses: warrenbuckley/Setup-MSBuild@v1
-      env:
-         ACTIONS_ALLOW_UNSECURE_COMMANDS: 'true'
-    - name: Setup NuGet
-      uses: NuGet/setup-nuget@v1.0.2
-      env:
-        ACTIONS_ALLOW_UNSECURE_COMMANDS: 'true'
-    - name: Restore Packages
-      run: nuget restore PullCanvasData2.sln
     - name: Compile Package
       working-directory: PullCanvasData2
-      run: nuget pack PullCanvasData2.csproj -Build -Properties Configuration=Release -Properties BuildVersion=$(date "+%s")
-    - uses: actions/upload-artifact@v3
+      run: dotnet pack PullCanvasData2.csproj -c Release
+    - name: Check Package On .NET Framework
+      shell: bash
+      run: |
+        dotnet build PackageCheck/PackageCheck.csproj -c Release -p:PullCanvasData2Version=$(dotnet msbuild PullCanvasData2/PullCanvasData2.csproj -getProperty:Version)
+        PackageCheck/bin/Release/net48/PackageCheck.exe
+    - uses: actions/upload-artifact@v4
       with:
         name: pca
-        path: PullCanvasData2/PullCanvasData2*.nupkg
+        path: PullCanvasData2/bin/Release/PullCanvasData2*.nupkg
 
   deploy-package:
   
@@ -38,7 +31,7 @@ jobs:
     needs: build-package
     
     steps:
-    - uses: actions/download-artifact@v3
+    - uses: actions/download-artifact@v4
       with:
         name: pca
     - name: Run deploy script

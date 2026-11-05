@@ -4,9 +4,10 @@ using System;
 using System.IO;
 using System.Threading.Tasks;
 using AppUtils;
+using PullCanvasData2;
 using Tomlyn.Syntax;
 
-namespace PullCanvasData2; 
+namespace PullCanvasData2Test; 
 
 internal static class Program {
     public static async Task Main(string[] args) {

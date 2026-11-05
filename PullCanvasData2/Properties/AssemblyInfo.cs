@@ -9,7 +9,7 @@ using System.Runtime.InteropServices;
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("")]
 [assembly: AssemblyProduct("PullCanvasData2")]
-[assembly: AssemblyCopyright("Copyright © University View Academy 2023")]
+[assembly: AssemblyCopyright("Copyright © University View Academy 2026")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
 
