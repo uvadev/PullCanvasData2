@@ -17,9 +17,16 @@ namespace PullCanvasData2 {
         private readonly HttpClient client;
         private readonly AuthMonitor authMonitor;
         
-        public CanvasData(string baseUrl, string clientId, string clientSecret) {
-            client = new HttpClient();
-            authMonitor = new AuthMonitor(baseUrl, clientId, clientSecret);
+        public CanvasData(string baseUrl, string clientId, string clientSecret)
+            : this(baseUrl, clientId, clientSecret, new RetryOptions()) { }
+
+        /// <param name="baseUrl">The base URL for interacting with CanvasData2.</param>
+        /// <param name="clientId">The client id from the CD2 console.</param>
+        /// <param name="clientSecret">The client secret from the CD2 console.</param>
+        /// <param name="retryOptions">Parameters for retrying requests that are rate limited (429) or hit a server error (5xx).</param>
+        public CanvasData(string baseUrl, string clientId, string clientSecret, RetryOptions retryOptions) {
+            client = new HttpClient(new RetryHandler(retryOptions));
+            authMonitor = new AuthMonitor(baseUrl, clientId, clientSecret, retryOptions);
 
             client.BaseAddress = new Uri(baseUrl);
             client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
@@ -114,6 +121,8 @@ namespace PullCanvasData2 {
                                                    "/dap/object/url", 
                                                    BuildHttpJsonBody(JArray.FromObject(j.Objects))
                                                    );
+
+            AssertSuccess(response);
         
             var data = JsonConvert.DeserializeObject<ObjectUrlsResponse>(await response.Content.ReadAsStringAsync());
         

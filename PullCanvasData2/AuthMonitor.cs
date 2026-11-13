@@ -13,8 +13,8 @@ internal class AuthMonitor {
     private readonly HttpClient client;
     private AuthenticationResponse authData;
 
-    internal AuthMonitor(string baseUrl, string clientId, string clientSecret) {
-        client = new HttpClient();
+    internal AuthMonitor(string baseUrl, string clientId, string clientSecret, RetryOptions retryOptions) {
+        client = new HttpClient(new RetryHandler(retryOptions));
         client.BaseAddress = new Uri(baseUrl);
 
         client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue(
